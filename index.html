@@ -1,1 +1,61 @@
-Hello
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirect...</title>
+    <script>
+        async function getPageList() {
+            try {
+                // Coba ambil daftar file di direktori dengan fetch dari sitemap.xml atau file lain
+                let response = await fetch("sitemap.xml");
+                let text = await response.text();
+
+                // Ekstrak URL dari sitemap (jika pakai sitemap)
+                let parser = new DOMParser();
+                let xml = parser.parseFromString(text, "text/xml");
+                let urls = Array.from(xml.getElementsByTagName("loc")).map(loc => loc.textContent);
+
+                // Ambil hanya yang berakhiran .html
+                let pages = urls.filter(url => url.endsWith(".html")).map(url => url.split("/").pop());
+
+                return pages;
+            } catch (error) {
+                console.error("Gagal mengambil daftar halaman:", error);
+                return [];
+            }
+        }
+
+        async function redirectToRandomPage() {
+            let pages = await getPageList();
+            let currentPage = window.location.pathname.split("/").pop();
+
+            // Hapus halaman saat ini dari daftar
+            let otherPages = pages.filter(page => page !== currentPage);
+
+            if (otherPages.length > 0) {
+                let randomPage = otherPages[Math.floor(Math.random() * otherPages.length)];
+
+                // Redirect setelah 3 detik
+                setTimeout(() => {
+                    window.location.href = randomPage;
+                }, 3000);
+
+                // Tampilkan link sebelum redirect
+                document.addEventListener("DOMContentLoaded", function () {
+                    document.getElementById("targetUrl").textContent = randomPage;
+                    document.getElementById("targetUrl").href = randomPage;
+                });
+            } else {
+                console.error("Tidak ada halaman lain yang bisa dipilih.");
+            }
+        }
+
+        redirectToRandomPage();
+    </script>
+</head>
+<body>
+    <h2>Anda akan dialihkan ke halaman lain dalam 3 detik...</h2>
+    <p>Jika tidak otomatis, klik <a id="targetUrl" href="#">di sini</a>.</p>
+</body>
+</html>
